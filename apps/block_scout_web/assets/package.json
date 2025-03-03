@@ -14,7 +14,7 @@
   "scripts": {
     "deploy": "webpack --mode production",
     "watch": "webpack --mode development --watch",
-    "build": "webpack --mode development",
+    "build": "node init && webpack --mode development",
     "test": "jest",
     "eslint": "eslint js/**"
   },
