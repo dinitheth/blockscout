@@ -394,6 +394,7 @@ defmodule Explorer.Chain.Import.Runner.BlocksTest do
 
     test "inserts missing ranges if there are blocks that lost consensus",
          %{consensus_block: %{number: block_number} = block, options: options} do
+
       block1 = params_for(:block, consensus: true, miner_hash: insert(:address).hash)
 
       block2 =
@@ -408,6 +409,8 @@ defmodule Explorer.Chain.Import.Runner.BlocksTest do
       insert_block(block2, options)
 
       Process.sleep(100)
+
+      Repo.all(MissingBlockRange) |> IO.inspect(label: "Missing ranges")
 
       assert %{from_number: ^block_number, to_number: ^block_number} = Repo.one(MissingBlockRange)
     end
@@ -668,12 +671,13 @@ defmodule Explorer.Chain.Import.Runner.BlocksTest do
 
   describe "lose_consensus/5" do
     test "loses consensus only for consensus=true blocks" do
-      insert(:block, consensus: true, number: 0)
-      insert(:block, consensus: true, number: 1)
-      insert(:block, consensus: false, number: 2)
 
-      new_block0 = params_for(:block, miner_hash: insert(:address).hash, number: 0)
-      new_block1 = params_for(:block, miner_hash: insert(:address).hash, parent_hash: new_block0.hash, number: 1)
+      insert(:block, consensus: true, number: 0) |> IO.inspect(label: 1)
+      insert(:block, consensus: true, number: 1) |> IO.inspect(label: 2)
+      insert(:block, consensus: false, number: 2) |> IO.inspect(label: 3)
+
+      new_block0 = params_for(:block, miner_hash: insert(:address).hash, number: 0) |> IO.inspect(label: "Params1")
+      new_block1 = params_for(:block, miner_hash: insert(:address).hash, parent_hash: new_block0.hash, number: 1) |> IO.inspect(label: "params 2")
 
       %Ecto.Changeset{valid?: true, changes: new_block1_changes} = Block.changeset(%Block{}, new_block1)
 
@@ -681,6 +685,9 @@ defmodule Explorer.Chain.Import.Runner.BlocksTest do
         timeout: 60_000,
         timestamps: %{updated_at: DateTime.utc_now()}
       }
+
+      Application.get_env(:indexer, :first_block) |> IO.inspect(label: "First block")
+      Repo.all(Block) |> IO.inspect(label: "All blocks")
 
       assert {:ok, [{0, _}, {1, _}]} = Blocks.lose_consensus(Repo, [], [1], [new_block1_changes], opts)
     end

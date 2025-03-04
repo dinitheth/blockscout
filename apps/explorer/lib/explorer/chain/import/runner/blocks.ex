@@ -412,6 +412,8 @@ defmodule Explorer.Chain.Import.Runner.Blocks do
         lock: "FOR NO KEY UPDATE"
       )
 
+    repo.to_sql(:all, acquire_query) |> IO.inspect(label: "SQL")
+
     {_, removed_consensus_block_hashes} =
       repo.update_all(
         from(
